@@ -1,11 +1,6 @@
 """
 Attempting to recreate the MSSQL DATEADD function in python 3
 
-
- print('The increment {0} is not an int, it is a {1}'.format(inc, type(inc).__name__))
- print('The Datepart {0} is not a string, it is a {1}'.format(datepart, type(datepart).__name__))
- print('The date {0} is not a date, it is a {1}'.format(date, type(date).__name__))
-
  returns to / formatting: _datetime.strptime(date,"%m/%d/%Y").strftime('%m/%d/%Y')
 """
 
@@ -19,17 +14,11 @@ __date__ = ['datetime.datetime','datetime','str']
 
 
 def __verifyIncrement(inc):
-    if type(inc).__name__ != 'int':
-        return False
-    else:
-        return True
+    return isinstance(inc, int)
 
 
 def __verifyDate(date):
-    if type(date).__name__ not in __date__:
-        return False
-    else:
-        return True
+    return type(date).__name__ in __date__
 
 
 def __verifyDatePart(datepart):
@@ -40,13 +29,16 @@ def __verifyDatePart(datepart):
 
 
 def __add_months(inc, date):
-    ## Months are weird and I do not like them.
-    add   = date.month - 1 + inc
-    year  = int(date.year + add / 12 )
-    month = date.month % 12 + inc
-
-    while month < 1:
-        month = month + 12
+    # if months > 12 then need to adjust the year as well.
+    add = date.month - 1 + inc
+    year = int(date.year + add / 12 )
+    # In order to properly handle negative increments, keep adding 12 until the month is > 1
+    # jan = 1 , nov = 11 inc = -2
+    # (1 - (-2) ) + 12 = 11
+    month = ((date.month % 12) + inc) % 12
+    # no month can be 0, so 0 = 12.
+    if month == 0:
+        month = 12
 
     day = min(date.day,_calendar.monthrange(year,month)[1])
     retdate = _datetime(year=year, month=month, day=day)
@@ -54,23 +46,26 @@ def __add_months(inc, date):
     return retdate
 
 def __add_years(inc, date):
-    year  = int(date.year + inc)
+    # years don't impact months or days. Simple addition.
+    year = int(date.year + inc)
     month = date.month
-    day   = min(date.day,_calendar.monthrange(year,month)[1])
+    day = min(date.day,_calendar.monthrange(year,month)[1])
 
     retdate = _datetime(year=year, month=month, day=day)
 
     return retdate
 
 def __add_days(inc, date):
+    # timedelta handles days, even negatives.
     retdate = date + _timedelta(days=inc)
     return retdate
 
 
 def dateadd(datepart, inc, date):
-    if __verifyDatePart(datepart.lower()) == False or __verifyIncrement(inc) == False or __verifyDate(date) == False:
+    if not all((__verifyDatePart(datepart.lower()), __verifyIncrement(inc), __verifyDate(date))):
         return 'it\'s wrong.'
     else:
+        # make sure date is either in m/d/y or d/m/y format the convert to datetime type
         if type(date).__name__ == 'str':
             try:
                 date = _datetime.strptime(date,"%m/%d/%Y")
@@ -87,5 +82,5 @@ def dateadd(datepart, inc, date):
             return __add_days(inc, date)
 
         if datepart.lower() in ['y','year']:
-            return  __add_years(inc,date)
+            return __add_years(inc,date)
 
