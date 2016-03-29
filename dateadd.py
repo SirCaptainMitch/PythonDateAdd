@@ -53,28 +53,39 @@ def __add_months(inc, date):
 
     return retdate
 
+def __add_years(inc, date):
+    year  = int(date.year + inc)
+    month = date.month
+    day   = min(date.day,_calendar.monthrange(year,month)[1])
+
+    retdate = _datetime(year=year, month=month, day=day)
+
+    return retdate
+
+def __add_days(inc, date):
+    retdate = date + _timedelta(days=inc)
+    return retdate
+
+
 def dateadd(datepart, inc, date):
     if __verifyDatePart(datepart.lower()) == False or __verifyIncrement(inc) == False or __verifyDate(date) == False:
         return 'it\'s wrong.'
     else:
         if type(date).__name__ == 'str':
-            date = _datetime.strptime(date,"%m/%d/%Y")
+            try:
+                date = _datetime.strptime(date,"%m/%d/%Y")
+            except ValueError:
+                try:
+                    date = _datetime.strptime(date,"%d/%m/%Y")
+                except ValueError:
+                    print('Please format the date string as m/d/y or d/m/y')
 
-        if datepart.lower() in ['m','month','Month']:
+        if datepart.lower() in ['m','month']:
             return __add_months(inc, date)
 
-
-
         if datepart.lower() in ['d','day']:
-            if inc >= 0:
-                retdate = date + _timedelta(days=inc)
-                return retdate
-            else:
-                retdate = date - _timedelta(days=abs(inc))
-                return retdate
+            return __add_days(inc, date)
 
-        # if datepart in ['y','year']:
-        #     if inc >= 0:
-        #         retdate = date + _timedelta(days=inc)
-        #     else:
-        #         retdate = date - _timedelta(days=abs(inc))
+        if datepart.lower() in ['y','year']:
+            return  __add_years(inc,date)
+
