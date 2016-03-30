@@ -13,7 +13,9 @@ Import the dateadd function from the dateadd module.
 The function parameters are: dateadd(Datepart, increment, date)
 
 Dateadd: ('m','d','y','month','day','year')
+
 Increment: positive or negative
+
 Date: datetime and string types in M/D/Y or D/M/Y format.
 
 print(dateadd('m',-1,'03/30/2016'))
